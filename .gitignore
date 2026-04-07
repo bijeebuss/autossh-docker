@@ -1,0 +1,6 @@
+.env
+.env.*
+docker-compose.yml
+known_hosts
+*.pem
+*.key

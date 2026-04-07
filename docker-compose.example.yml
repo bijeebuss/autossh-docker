@@ -1,0 +1,22 @@
+services:
+  autossh:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      SSH_TARGET_USER: tunnel-user
+      SSH_TARGET_HOST: your.server.example.com
+      SSH_TARGET_PORT: "22"
+      AUTOSSH_MONITOR_PORT: "0"
+      SSH_KEY_PATH: /root/.ssh/id_ed25519
+      SSH_STRICT_HOST_KEY_CHECKING: "no"
+      TUNNELS: >-
+        -R 80:127.0.0.1:80
+        -R 443:127.0.0.1:443
+        -R 0.0.0.0:8777:host.docker.internal:8777
+      EXTRA_SSH_ARGS: ""
+    volumes:
+      - ${SSH_DIR}:/root/.ssh:ro
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    restart: unless-stopped
