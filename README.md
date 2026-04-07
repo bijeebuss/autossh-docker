@@ -2,6 +2,8 @@
 
 Generic Docker-based `autossh` tunnel runner.
 
+This repo stays generic. It does not include any real SSH keys, hostnames, usernames, or IP addresses.
+
 
 ## Files
 
@@ -30,54 +32,44 @@ Generic Docker-based `autossh` tunnel runner.
    cp docker-compose.example.yml docker-compose.yml
    ```
 
-3. Set `SSH_DIR` to your local `.ssh` directory before starting the container.
+3. Create a local `.ssh` folder inside `autossh-docker` before building.
 
-   Examples:
-
-   Linux or macOS:
+   Example:
 
    ```sh
-   export SSH_DIR="$HOME/.ssh"
+   mkdir -p .ssh
+   cp /path/to/your/private/key .ssh/id_ed25519
+   cp /path/to/your/public/key .ssh/id_ed25519.pub
+   cp /path/to/your/known_hosts .ssh/known_hosts
    ```
 
-   PowerShell:
+   Do not commit that folder. It is ignored locally and copied into the image only at build time.
 
-   ```powershell
-   $env:SSH_DIR = "$HOME/.ssh"
+4. Copy the example Compose file and edit it:
+
+   ```sh
+   cp docker-compose.example.yml docker-compose.yml
    ```
 
-   Windows Command Prompt:
-
-   ```cmd
-   set SSH_DIR=%USERPROFILE%\.ssh
-   ```
-
-4. Edit `docker-compose.yml` and replace the placeholder values:
+   Replace the placeholder values:
 
    - `SSH_TARGET_USER` with your SSH username
    - `SSH_TARGET_HOST` with your SSH host or IP
    - `SSH_TARGET_PORT` if not `22`
-   - `SSH_KEY_PATH` with the path inside the container to your mounted key
+   - `SSH_KEY_PATH` with the path to the copied private key inside the container
    - `TUNNELS` with your `-R` and/or `-L` forwarding rules
 
    The example includes a reverse tunnel that exposes remote port `8777` on all remote interfaces and forwards it to `host.docker.internal:8777` on the Docker host.
 
-5. Make sure your SSH key is mounted read-only. The example uses:
-
-   ```yaml
-   volumes:
-     - ${SSH_DIR}:/root/.ssh:ro
-   ```
-   
-   This reuses keys from your machine and avoids copying secrets into this repo.
-
-6. Start the container:
+5. Build and start the container:
 
    ```sh
    docker compose up -d --build
    ```
 
-7. View logs if needed:
+   During build, the Dockerfile copies `.ssh/` into `/root/.ssh` and normalizes permissions before the container starts.
+
+6. View logs if needed:
 
    ```sh
    docker compose logs -f
@@ -88,6 +80,7 @@ Generic Docker-based `autossh` tunnel runner.
 - `AUTOSSH_MONITOR_PORT=0` disables the dedicated monitoring port and relies on SSH keepalives.
 - `host.docker.internal:host-gateway` lets the container reach services running on the Docker host without using host networking.
 - Binding a reverse tunnel to `0.0.0.0` usually requires `GatewayPorts yes` or `GatewayPorts clientspecified` on the remote SSH server.
+- SSH files are copied into `/root/.ssh` during image build, and the Dockerfile fixes permissions for the directory, keys, `config`, and `known_hosts`.
 - Set `SSH_STRICT_HOST_KEY_CHECKING=yes` once you have known hosts configured.
 - If your SSH server needs additional options, put them in `EXTRA_SSH_ARGS`.
 

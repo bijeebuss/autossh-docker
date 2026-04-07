@@ -1,5 +1,6 @@
 .env
 .env.*
+.ssh/
 docker-compose.yml
 known_hosts
 *.pem

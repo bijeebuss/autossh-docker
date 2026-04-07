@@ -15,8 +15,6 @@ services:
         -R 443:127.0.0.1:443
         -R 0.0.0.0:8777:host.docker.internal:8777
       EXTRA_SSH_ARGS: ""
-    volumes:
-      - ${SSH_DIR}:/root/.ssh:ro
     extra_hosts:
       - host.docker.internal:host-gateway
     restart: unless-stopped
